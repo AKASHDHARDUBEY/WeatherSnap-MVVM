@@ -142,10 +142,12 @@ fun WeatherScreen(
                 visible = weatherState is Resource.Success,
                 enter = expandVertically() + fadeIn()
             ) {
-                WeatherResultCard(
-                    weather = weatherState.data!!,
-                    onCreateReport = { onNavigateToCreateReport(weatherState.data!!.cityName) }
-                )
+                weatherState?.data?.let { data ->
+                    WeatherResultCard(
+                        weather = data,
+                        onCreateReport = { onNavigateToCreateReport("${data.cityName}|${data.temperature}|${data.condition}") }
+                    )
+                }
             }
 
             if (searchState is Resource.Loading) {
@@ -199,7 +201,7 @@ fun WeatherResultCard(weather: WeatherData, onCreateReport: () -> Unit) {
             }
             Text(text = weather.condition, color = TextSecondary)
             
-            Divider(modifier = Modifier.padding(vertical = 12.dp), color = SurfaceGreen)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = SurfaceGreen)
             
             Row(
                 modifier = Modifier.fillMaxWidth(),

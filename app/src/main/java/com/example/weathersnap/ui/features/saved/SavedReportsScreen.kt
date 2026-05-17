@@ -23,8 +23,12 @@ import com.example.weathersnap.data.local.entities.ReportEntity
 import com.example.weathersnap.ui.theme.AccentGreen
 import com.example.weathersnap.ui.theme.CardBackground
 import com.example.weathersnap.ui.theme.DarkBackground
+import com.example.weathersnap.ui.theme.SurfaceGreen
 import com.example.weathersnap.ui.theme.TextSecondary
 import com.example.weathersnap.util.ImageUtils
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SavedReportsScreen(
@@ -39,16 +43,52 @@ fun SavedReportsScreen(
             .background(DarkBackground)
             .padding(16.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Saved Reports", color = Color.White, style = MaterialTheme.typography.headlineSmall)
-            TextButton(onClick = { navController.popBackStack() }) {
-                Text("Back", color = Color.White)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    "Saved Reports",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (reports.isEmpty()) "No reports stored"
+                    else "${reports.size} report${if (reports.size > 1) "s" else ""} stored locally",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Button(
+                onClick = { navController.popBackStack() },
+                colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
+                shape = RoundedCornerShape(20.dp),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp)
+            ) {
+                Text("Back", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         if (reports.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No reports saved yet", color = TextSecondary)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "No reports saved yet",
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Create a report from the weather screen",
+                        color = TextSecondary.copy(alpha = 0.6f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -62,27 +102,131 @@ fun SavedReportsScreen(
 
 @Composable
 fun ReportItem(report: ReportEntity) {
+    val dateFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+    val formattedDate = dateFormat.format(Date(report.timestamp))
+
     Card(
         colors = CardDefaults.cardColors(containerColor = CardBackground),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            AsyncImage(
-                model = report.imagePath,
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = report.cityName, color = Color.White, fontWeight = FontWeight.Bold)
-            Text(text = report.notes, color = TextSecondary, style = MaterialTheme.typography.bodySmall)
-            
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Orig: ${ImageUtils.getFileSizeInKB(report.originalSize)}", color = TextSecondary, style = MaterialTheme.typography.labelSmall)
-                Text("Comp: ${ImageUtils.getFileSizeInKB(report.compressedSize)}", color = AccentGreen, style = MaterialTheme.typography.labelSmall)
+        Column {
+            if (report.imagePath.isNotEmpty()) {
+                AsyncImage(
+                    model = report.imagePath,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = report.cityName,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Box(
+                        modifier = Modifier
+                            .background(AccentGreen, RoundedCornerShape(16.dp))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${report.temp}\u00B0C",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = report.condition,
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    text = formattedDate,
+                    color = TextSecondary.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                SurfaceGreen.copy(alpha = 0.3f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            "Original",
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            ImageUtils.getFileSizeInKB(report.originalSize),
+                            color = AccentGreen,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                SurfaceGreen.copy(alpha = 0.3f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            "Compressed",
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            ImageUtils.getFileSizeInKB(report.compressedSize),
+                            color = AccentGreen,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
+                if (report.notes.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                SurfaceGreen.copy(alpha = 0.4f),
+                                RoundedCornerShape(6.dp)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = report.notes,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
         }
     }

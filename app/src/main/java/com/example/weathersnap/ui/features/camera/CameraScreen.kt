@@ -1,5 +1,9 @@
 package com.example.weathersnap.ui.features.camera
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -37,35 +41,61 @@ fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val captureState by viewModel.captureState.collectAsStateWithLifecycle()
-    
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
 
-    LaunchedEffect(Unit) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
+    LaunchedEffect(hasCameraPermission) {
+        if (hasCameraPermission) {
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
 
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner, 
-                    CameraSelector.DEFAULT_BACK_CAMERA, 
-                    preview, 
-                    imageCapture
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, ContextCompat.getMainExecutor(context))
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        preview,
+                        imageCapture
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }, ContextCompat.getMainExecutor(context))
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+        if (hasCameraPermission) {
+            AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+        } else {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Camera permission is required", color = Color.White)
+            }
+        }
 
         Row(
             modifier = Modifier
@@ -114,11 +144,11 @@ fun CameraScreen(
             navController.previousBackStackEntry
                 ?.savedStateHandle
                 ?.set("captured_image", result.compressedFile.absolutePath)
-            
+
             navController.previousBackStackEntry
                 ?.savedStateHandle
                 ?.set("original_size", result.originalSize)
-            
+
             navController.previousBackStackEntry
                 ?.savedStateHandle
                 ?.set("compressed_size", result.compressedSize)

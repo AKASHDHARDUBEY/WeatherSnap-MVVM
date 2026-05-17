@@ -7,9 +7,11 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface WeatherApi {
-    @GET("v1/search")
+    @GET("https://geocoding-api.open-meteo.com/v1/search")
     suspend fun searchCities(
-        @Query("q") query: String,
+        @Query("name") query: String,
+        @Query("count") count: Int = 10,
+        @Query("language") language: String = "en",
         @Query("format") format: String = "json"
     ): Response<CityResponse>
 
@@ -17,7 +19,6 @@ interface WeatherApi {
     suspend fun getWeather(
         @Query("latitude") lat: Double,
         @Query("longitude") lon: Double,
-        @Query("current") current: String = "true",
-        @Query("current_params") params: String = "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure"
+        @Query("current") current: String = "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,surface_pressure"
     ): Response<WeatherResponse>
 }

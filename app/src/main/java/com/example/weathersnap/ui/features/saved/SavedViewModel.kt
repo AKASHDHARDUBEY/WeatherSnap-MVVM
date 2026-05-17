@@ -21,8 +21,7 @@ class SavedViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             try {
-                // Cast to List<ReportEntity> based on generic return type
-                _reports.value = repository.getAllReports() as List<ReportEntity>
+                _reports.value = repository.getAllReports()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

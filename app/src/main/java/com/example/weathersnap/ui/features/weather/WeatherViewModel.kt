@@ -40,6 +40,7 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun onCitySelected(city: City) {
+        _searchState.value = Resource.Success(emptyList())
         viewModelScope.launch {
             _weatherState.value = Resource.Loading()
             _weatherState.value = repository.getWeather(city.latitude, city.longitude, city.name)

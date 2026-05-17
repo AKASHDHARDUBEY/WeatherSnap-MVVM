@@ -22,10 +22,16 @@ class ReportViewModel @Inject constructor(
     var imagePath by mutableStateOf<String?>(null)
     var originalSize by mutableStateOf(0L)
     var compressedSize by mutableStateOf(0L)
-    
-    val cityName: String = savedStateHandle.get<String>("weatherData") ?: "Unknown City"
+
+    private val rawData: String = savedStateHandle.get<String>("weatherData") ?: "Unknown City|0.0|Unknown"
+    private val parts = rawData.split("|")
+
+    val cityName: String = parts.getOrElse(0) { "Unknown City" }
+    val temp: Double = parts.getOrElse(1) { "0.0" }.toDoubleOrNull() ?: 0.0
+    val condition: String = parts.getOrElse(2) { "Unknown" }
 
     private var draftId: Int? = null
+    private var draftSaveInProgress = false
 
     fun loadDraft() {
         viewModelScope.launch {
@@ -45,25 +51,42 @@ class ReportViewModel @Inject constructor(
     }
 
     fun updateDraft() {
+        if (draftSaveInProgress) return
+        draftSaveInProgress = true
         viewModelScope.launch {
-            val report = ReportEntity(
-                id = draftId ?: 0,
-                cityName = cityName,
-                notes = notes,
-                imagePath = imagePath ?: "",
-                originalSize = originalSize,
-                compressedSize = compressedSize,
-                isDraft = true
-            )
-            repository.saveReport(report)
+            try {
+                val report = ReportEntity(
+                    id = draftId ?: 0,
+                    cityName = cityName,
+                    temp = temp,
+                    condition = condition,
+                    notes = notes,
+                    imagePath = imagePath ?: "",
+                    originalSize = originalSize,
+                    compressedSize = compressedSize,
+                    isDraft = true
+                )
+                repository.saveReport(report)
+                if (draftId == null) {
+                    val saved = repository.getDraftForCity(cityName)
+                    draftId = saved?.id
+                }
+            } finally {
+                draftSaveInProgress = false
+            }
         }
     }
 
     fun saveFinalReport(onSuccess: () -> Unit) {
         viewModelScope.launch {
+            if (draftId != null) {
+                repository.deleteReportById(draftId!!)
+            }
             val finalReport = ReportEntity(
-                id = draftId ?: 0,
+                id = 0,
                 cityName = cityName,
+                temp = temp,
+                condition = condition,
                 notes = notes,
                 imagePath = imagePath ?: "",
                 originalSize = originalSize,

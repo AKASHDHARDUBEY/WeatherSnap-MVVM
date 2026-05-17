@@ -5,7 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +24,7 @@ import com.example.weathersnap.ui.theme.CardBackground
 import com.example.weathersnap.ui.theme.DarkBackground
 import com.example.weathersnap.ui.theme.SurfaceGreen
 import com.example.weathersnap.ui.theme.TextSecondary
+import com.example.weathersnap.util.ImageUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,14 +33,15 @@ fun CreateReportScreen(
     viewModel: ReportViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    
+
     LaunchedEffect(Unit) {
         viewModel.loadDraft()
     }
 
-    val capturedImage = navController.previousBackStackEntry?.savedStateHandle?.get<String>("captured_image")
-    val origSize = navController.previousBackStackEntry?.savedStateHandle?.get<Long>("original_size")
-    val compSize = navController.previousBackStackEntry?.savedStateHandle?.get<Long>("compressed_size")
+    val currentEntry = navController.currentBackStackEntry
+    val capturedImage = currentEntry?.savedStateHandle?.get<String>("captured_image")
+    val origSize = currentEntry?.savedStateHandle?.get<Long>("original_size")
+    val compSize = currentEntry?.savedStateHandle?.get<Long>("compressed_size")
 
     LaunchedEffect(capturedImage) {
         capturedImage?.let {
@@ -47,6 +49,7 @@ fun CreateReportScreen(
             viewModel.originalSize = origSize ?: 0L
             viewModel.compressedSize = compSize ?: 0L
             viewModel.updateDraft()
+            currentEntry?.savedStateHandle?.remove<String>("captured_image")
         }
     }
 
@@ -66,21 +69,40 @@ fun CreateReportScreen(
 
         Card(
             colors = CardDefaults.cardColors(containerColor = CardBackground),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(
-                text = viewModel.cityName,
-                modifier = Modifier.padding(16.dp),
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = viewModel.cityName,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "${viewModel.temp}\u00B0C",
+                        color = AccentGreen,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = viewModel.condition,
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(220.dp)
                 .background(SurfaceGreen, RoundedCornerShape(12.dp))
                 .clickable { navController.navigate(Screen.Camera.route) },
             contentAlignment = Alignment.Center
@@ -94,21 +116,39 @@ fun CreateReportScreen(
                 )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White)
+                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
                     Text("Tap to Capture Photo", color = Color.White)
                 }
             }
         }
 
+        if (viewModel.originalSize > 0) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Original: ${ImageUtils.getFileSizeInKB(viewModel.originalSize)}",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    "Compressed: ${ImageUtils.getFileSizeInKB(viewModel.compressedSize)}",
+                    color = AccentGreen,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
+
         Button(
             onClick = { navController.navigate(Screen.Camera.route) },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)
         ) {
             Text("Capture Photo", color = Color.Black)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = viewModel.notes,

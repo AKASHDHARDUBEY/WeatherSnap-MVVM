@@ -11,4 +11,5 @@ interface WeatherRepository {
     suspend fun saveReport(report: ReportEntity)
     suspend fun getAllReports(): List<ReportEntity>
     suspend fun getDraftForCity(cityName: String): ReportEntity?
+    suspend fun deleteReportById(id: Int)
 }

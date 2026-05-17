@@ -2,6 +2,7 @@ package com.example.weathersnap.util
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset

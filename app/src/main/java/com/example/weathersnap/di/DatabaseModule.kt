@@ -21,7 +21,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "weather_snap_db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides

@@ -18,6 +18,9 @@ interface WeatherReportDao {
     @Query("SELECT * FROM weather_reports WHERE cityName = :cityName AND isDraft = 1 LIMIT 1")
     suspend fun getDraftForCity(cityName: String): ReportEntity?
 
+    @Query("DELETE FROM weather_reports WHERE id = :id")
+    suspend fun deleteReportById(id: Int)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveWeatherCache(cache: WeatherCacheEntity)
 
