@@ -85,5 +85,6 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveReport(report: ReportEntity) = dao.insertReport(report)
-    override suspend fun getAllReports() = dao.getAllReports()
+    override suspend fun getAllReports(): List<ReportEntity> = dao.getAllReports()
+    override suspend fun getDraftForCity(cityName: String): ReportEntity? = dao.getDraftForCity(cityName)
 }

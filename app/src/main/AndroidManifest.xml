@@ -8,6 +8,7 @@
                      android:maxSdkVersion="28" />
 
     <application
+        android:name=".WeatherSnapApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="WeatherSnap"

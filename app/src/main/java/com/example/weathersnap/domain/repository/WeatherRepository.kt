@@ -9,5 +9,6 @@ interface WeatherRepository {
     suspend fun searchCities(query: String): Resource<List<City>>
     suspend fun getWeather(lat: Double, lon: Double, cityName: String): Resource<WeatherData>
     suspend fun saveReport(report: ReportEntity)
-    suspend fun getAllReports(): Any
+    suspend fun getAllReports(): List<ReportEntity>
+    suspend fun getDraftForCity(cityName: String): ReportEntity?
 }

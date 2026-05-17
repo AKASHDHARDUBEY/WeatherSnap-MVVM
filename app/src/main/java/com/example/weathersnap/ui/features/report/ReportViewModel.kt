@@ -30,7 +30,14 @@ class ReportViewModel @Inject constructor(
     fun loadDraft() {
         viewModelScope.launch {
             try {
-                val draft = (repository as? Any)
+                val draft = repository.getDraftForCity(cityName)
+                draft?.let {
+                    draftId = it.id
+                    notes = it.notes
+                    imagePath = it.imagePath
+                    originalSize = it.originalSize
+                    compressedSize = it.compressedSize
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
